@@ -1,0 +1,15 @@
+{
+    "require": {
+        "phpunit/phpunit": "^4.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "TuringPHP\\Enigma\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TuringPHP\\Enigma\\Tests\\": "tests"
+        }
+    }
+}
