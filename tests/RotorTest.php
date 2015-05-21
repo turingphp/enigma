@@ -21,7 +21,7 @@ class RotorTest extends Test
     {
         $this->rotor = new Rotor(
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-            "DMTWSILRUYQNKFEJCAZBPGXOHV",
+            "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
             0
         );
     }
@@ -37,88 +37,81 @@ class RotorTest extends Test
     /**
      * @test
      *
-     * @covers TuringPHP\Enigma\Rotor::follow
+     * @covers TuringPHP\Enigma\Rotor::forward
+     * @covers TuringPHP\Enigma\Rotor::backward
+     * @covers TuringPHP\Enigma\Rotor::setPosition
+     * @covers TuringPHP\Enigma\Rotor::stepPosition
      */
-    public function follow()
+    public function forwardAndBackwardAndStepPosition()
     {
-        $rotor = $this->rotor;
-
-        $rotor = $rotor->withAdjustedPosition();
+        $this->rotor->stepPosition();
 
         $this->assertEquals(
-            "M", $rotor->follow("A")
+            "K", $this->rotor->forward("A")
         );
-
-        $rotor = $rotor->withAdjustedPosition();
 
         $this->assertEquals(
-            "T", $rotor->follow("A")
+            "A", $this->rotor->backward("K")
         );
 
-        // D M T W S I...
-        //      ↑
-
-        for ($i = 0; $i < 49; $i++) {
-            $rotor = $rotor->withAdjustedPosition();
+        for ($i = 0; $i < 30; $i++) {
+            $this->rotor->stepPosition();
         }
 
-        // ...P G X O H V
-        //             ↑
+        $this->assertEquals(
+            "G", $this->rotor->forward("A")
+        );
 
-        $rotor = $rotor->withAdjustedPosition();
+        $this->rotor->setPosition(-13);
 
         $this->assertEquals(
-            "D", $rotor->follow("A")
+            "W", $this->rotor->forward("A")
+        );
+
+        $this->rotor->setPosition(39);
+
+        $this->assertEquals(
+            "W", $this->rotor->forward("A")
         );
     }
 
     /**
      * @test
      */
-    public function position() {
+    public function getPosition() {
         $this->assertEquals(
-            0, $this->rotor->position()
-        );
-    }
-
-    /**
-     * @test
-     *
-     * @covers TuringPHP\Enigma\Rotor::withPosition
-     */
-    public function withPosition() {
-        $rotor = $this->rotor->withPosition(1);
-
-        $this->assertInstanceOf(
-            get_class($this->rotor), $rotor
-        );
-
-        $this->assertNotSame(
-            $this->rotor, $rotor
-        );
-
-        $this->assertEquals(
-            1, $rotor->position()
+            0, $this->rotor->getPosition()
         );
     }
 
     /**
      * @test
      *
-     * @covers TuringPHP\Enigma\Rotor::shouldAdjustNextRotor
+     * @covers TuringPHP\Enigma\Rotor::setPosition
      */
-    public function shouldAdjustNextRotor()
+    public function setPosition() {
+        $this->rotor->setPosition(13);
+
+        $this->assertEquals(
+            13, $this->rotor->getPosition()
+        );
+    }
+
+    /**
+     * @test
+     *
+     * @covers TuringPHP\Enigma\Rotor::shouldStepNextRotor
+     */
+    public function shouldStepNextRotor()
     {
-        $rotor = $this->rotor->withPosition(25);
+        $this->rotor->setPosition(25);
 
         $this->assertTrue(
-            $rotor->shouldAdjustNextRotor()
+            $this->rotor->shouldStepNextRotor()
         );
 
-        $rotor = $rotor->withAdjustedPosition();
-
         $this->assertFalse(
-            $rotor->shouldAdjustNextRotor()
+            $this->rotor->stepPosition()->shouldStepNextRotor()
         );
     }
 }

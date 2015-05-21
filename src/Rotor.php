@@ -32,30 +32,31 @@ class Rotor
     }
 
     /**
-     * @return Rotor
+     * @return $this
      */
-    public function withAdjustedPosition()
+    public function stepPosition()
     {
-        $position = $this->position + 1;
+        $this->position += 1;
 
-        if ($position >= strlen($this->fromLetters)) {
-            $position = 0;
-        }
+        $this->limitPosition();
 
-        return $this->withPosition($position);
+        return $this;
     }
 
     /**
-     * @param int $position
-     *
-     * @return Rotor
+     * @return $this
      */
-    public function withPosition($position)
+    protected function limitPosition()
     {
-        $clone = clone $this;
-        $clone->position = $position;
+        while ($this->position >= strlen($this->fromLetters)) {
+            $this->position -= strlen($this->fromLetters);
+        }
 
-        return $clone;
+        while ($this->position <= -1) {
+            $this->position += strlen($this->fromLetters);
+        }
+
+        return $this;
     }
 
     /**
@@ -63,8 +64,10 @@ class Rotor
      *
      * @return string
      */
-    public function follow($letter)
+    public function forward($letter)
     {
+        $this->limitPosition();
+
         $letters = $this->adjustedLetters();
 
         $index = stripos($this->fromLetters, $letter);
@@ -78,7 +81,7 @@ class Rotor
     protected function adjustedLetters()
     {
         $letters = $this->toLetters;
-        $position = $this->position();
+        $position = $this->getPosition();
 
         return substr($letters, $position) . substr($letters, 0, $position);
     }
@@ -86,16 +89,44 @@ class Rotor
     /**
      * @return int
      */
-    public function position()
+    public function getPosition()
     {
         return $this->position;
     }
 
     /**
+     * @param int $position
+     *
+     * @return $this
+     */
+    public function setPosition($position)
+    {
+        $this->position = $position;
+
+        return $this;
+    }
+
+    /**
      * @return bool
      */
-    public function shouldAdjustNextRotor()
+    public function shouldStepNextRotor()
     {
-        return $this->position() === strlen($this->fromLetters) - 1;
+        return $this->getPosition() === strlen($this->fromLetters) - 1;
+    }
+
+    /**
+     * @param string $letter
+     *
+     * @return string
+     */
+    public function backward($letter)
+    {
+        $this->limitPosition();
+
+        $letters = $this->adjustedLetters();
+
+        $index = stripos($letters, $letter);
+
+        return $this->fromLetters[$index];
     }
 }

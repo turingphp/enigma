@@ -5,23 +5,23 @@ namespace TuringPHP\Enigma;
 class Machine
 {
     /**
-     * @var array
+     * @var Rotor[]
      */
     protected $rotors;
 
     /**
-     * @var null|Plugboard
+     * @var Reflector
      */
-    protected $plugboard;
+    protected $reflector;
 
     /**
-     * @param array          $rotors
-     * @param null|Plugboard $plugboard
+     * @param array     $rotors
+     * @param Reflector $reflector
      */
-    public function __construct(array $rotors, Plugboard $plugboard = null)
+    public function __construct(array $rotors, Reflector $reflector)
     {
         $this->rotors = $rotors;
-        $this->plugboard = $plugboard;
+        $this->reflector = $reflector;
     }
 
     /**
@@ -29,66 +29,63 @@ class Machine
      *
      * @return string
      */
-    public function follow($letter)
+    public function translate($letter)
     {
+        $this->adjustRotors();
+
         foreach ($this->rotors as $i => $rotor) {
             /**
              * @var Rotor $rotor
              */
-            if ($rotor->shouldAdjustNextRotor() and $this->hasNextRotor($i)) {
-                $this->adjustNextRotor($i);
-            }
-
-            $letter = $this->followRotor($letter, $i, $rotor);
+            $letter = $rotor->forward($letter);
         }
 
-        if ($this->plugboard !== null) {
-            return $this->plugboard->follow($letter);
+        $letter = $this->reflector->swap($letter);
+
+        foreach (array_reverse($this->rotors) as $rotor) {
+            /**
+             * @var Rotor $rotor
+             */
+            $letter = $rotor->backward($letter);
         }
 
         return $letter;
     }
 
     /**
-     * @param int $index
-     *
-     * @return bool
+     * @return $this
      */
-    protected function hasNextRotor($index)
+    protected function adjustRotors()
     {
-        return isset($this->rotors[$index + 1]);
-    }
+        foreach ($this->rotors as $i => $rotor) {
+            if ($i === 0) {
+                $this->rotors[0]->stepPosition();
+            }
 
-    /**
-     * @param int $index
-     */
-    protected function adjustNextRotor($index)
-    {
-        /**
-         * @var Rotor $nextRotor
-         */
-        $nextRotor = $this->rotors[$index + 1];
-
-        $this->rotors[$index + 1] = $nextRotor->withAdjustedPosition();
-    }
-
-    /**
-     * @param string $letter
-     * @param int    $index
-     * @param Rotor  $rotor
-     *
-     * @return array
-     */
-    protected function followRotor($letter, $index, Rotor $rotor)
-    {
-        if ($index > 0) {
-            return $rotor->follow($letter);
+            if ($rotor->shouldStepNextRotor() and isset($this->rotors[$i + 1])) {
+                $this->rotors[$i + 1]->stepPosition();
+            }
         }
 
-        $rotor = $rotor->withAdjustedPosition();
+        return $this;
+    }
 
-        $this->rotors[$index] = $rotor;
+    /**
+     * @param array $positions
+     *
+     * @return $this
+     */
+    public function setRotorPositions(array $positions)
+    {
+        foreach ($positions as $i => $position) {
+            /**
+             * @var Rotor $rotor
+             */
+            $rotor = $this->rotors[$i];
 
-        return $rotor->follow($letter);
+            $this->rotors[$i] = $rotor->setPosition($position);
+        }
+
+        return $this;
     }
 }

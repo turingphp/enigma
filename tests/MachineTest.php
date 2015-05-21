@@ -3,7 +3,7 @@
 namespace TuringPHP\Enigma\Tests;
 
 use TuringPHP\Enigma\Machine;
-use TuringPHP\Enigma\Plugboard;
+use TuringPHP\Enigma\Reflector;
 use TuringPHP\Enigma\Rotor;
 
 /**
@@ -25,25 +25,24 @@ class MachineTest extends Test
             [
                 new Rotor(
                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                    "DMTWSILRUYQNKFEJCAZBPGXOHV",
+                    "EKMFLGDQVZNTOWYHXUSPAIBRCJ",
                     0
                 ),
                 new Rotor(
                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                    "HQZGPJTMOBLNCIFDYAWVEUSRKX",
+                    "AJDKSIRUXBLHWTMCQGZNPYFVOE",
                     0
                 ),
                 new Rotor(
                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                    "UQNTLSZFMREHDPXKIBVYGJCWOA",
+                    "BDFHJLCPRTXVZNYEIWGAKMUSQO",
                     0
                 )
             ],
-            new Plugboard([
-                ["I", "J"],
-                ["K", "L"],
-                ["M", "N"],
-            ])
+            new Reflector(
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                "FVPJIAOYEDRZXWGCTKUQSBNMHL"
+            )
         );
     }
 
@@ -60,83 +59,36 @@ class MachineTest extends Test
      */
     public function follow()
     {
-        // ...X Y Z A B C D... (starting letter)
-        //          ↕
-        // ...H V D M T W S... (first rotor)
-        //          ↕
-        // ...B L N C I F D... (second rotor)
-        //          ↕
-        // ...A U Q N T L S... (third rotor)
-        //          ↕
-        //      N → M          (plugboard)
-        //          ↕
-        //          M          (ending letter)
-
         $this->assertEquals(
-            "M", $this->machine->follow("A")
-        );
-
-        // ...X Y Z A B C D... (starting letter)
-        //          ↕
-        // ...V D M T W S I... (first rotor)
-        //          ↕
-        // ...Y A W V E U S... (second rotor)
-        //          ↕
-        // ...V Y G J C W O... (third rotor)
-        //          ↕
-        //      J → I          (plugboard)
-        //          ↕
-        //          I          (ending letter)
-
-        $this->assertEquals(
-            "I", $this->machine->follow("A")
-        );
-
-        for ($i = 0; $i < 24; $i++) {
-            $this->machine->follow("A");
-        }
-
-        // ...X Y Z A B C D... (starting letter)
-        //          ↕
-        // ...H V D M T W S... (first rotor)
-        //          ↕
-        // ...L N C I F D Y... (second rotor)
-        //          ↕
-        // ...S Z F M R E H... (third rotor)
-        //          ↕
-        //      M → N          (plugboard)
-        //          ↕
-        //          N          (ending letter)
-
-        $this->assertEquals(
-            "N", $this->machine->follow("A")
-        );
-    }
-
-    /**
-     * @test
-     */
-    public function followWithoutPlugboard() {
-        $machine = new Machine(
-            [
-                new Rotor(
-                    "ABC",
-                    "CBA",
-                    0
-                )
-            ]
+            "O", $this->machine->setRotorPositions([-12, 0, 0])->translate("A")
         );
 
         $this->assertEquals(
-            "B", $machine->follow("A")
+            "A", $this->machine->setRotorPositions([-12, 0, 0])->translate("O")
         );
 
         $this->assertEquals(
-            "A", $machine->follow("A")
+            "T", $this->machine->setRotorPositions([0, 0, 0])->translate("A")
         );
 
         $this->assertEquals(
-            "C", $machine->follow("A")
+            "A", $this->machine->setRotorPositions([0, 0, 0])->translate("T")
+        );
+
+        $this->assertEquals(
+            "Z", $this->machine->setRotorPositions([12, 0, 0])->translate("A")
+        );
+
+        $this->assertEquals(
+            "A", $this->machine->setRotorPositions([12, 0, 0])->translate("Z")
+        );
+
+        $this->assertEquals(
+            "K", $this->machine->setRotorPositions([24, 0, 0])->translate("A")
+        );
+
+        $this->assertEquals(
+            "A", $this->machine->setRotorPositions([24, 0, 0])->translate("K")
         );
     }
 }
